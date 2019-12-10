@@ -1,4 +1,26 @@
-```
+# 关于subprocess.Popen()的返回值
+
+版权声明：本文为CSDN博主「zhangheng007a」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明
+原文链接：<https://blog.csdn.net/weixin_38120374/article/details/80607369>
+
+---
+以下代码中returncode为执行返回结果的标志
+
+我总结的有以下几种情况
+
+returncode=0 表示执行成功
+
+returncode=127 表示语句为空串
+
+returncode=17 表示找不到表
+
+returncode=64 表示缺失关键字
+
+returncode=41 表示查询的字段不存在
+
+如果有疑问，大家可以copy我的脚本自行进行验证。
+
+```python
 try:
     fo = open("zhangheng/python/core_field.txt", "r")  #字段验证
     fh = open("core_field.log", "w")  #字段验证日志输出
@@ -6,7 +28,7 @@ try:
     errorlog = open("error.log", "w")  #字段验证日志输出
     print len(lines)
     print '开始执行sql文档，将不会打印动态日志，如果执行失败，会将sql以及失败原因写入log日志文件,英文日志将存放于error.log中：'
-    for cmd in lines:    
+    for cmd in lines:
         print cmd
         try:
             p = subprocess.Popen(cmd,shell=True, close_fds=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
@@ -46,27 +68,4 @@ except Exception,re:
 finally:
     fh.close()
     errorlog.close()
-————————————————
-版权声明：本文为CSDN博主「zhangheng007a」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
-原文链接：https://blog.csdn.net/weixin_38120374/article/details/80607369
 ```
-
-
-以上代码中returncode为执行返回结果的标志
-
-我总结的有以下几种情况
-
-returncode=0 表示执行成功
-
-returncode=127 表示语句为空串
-
-returncode=17 表示找不到表
-
-returncode=64 表示缺失关键字
-
-returncode=41 表示查询的字段不存在
-
-如果有疑问，大家可以copy我的脚本自行进行验证。
-————————————————
-版权声明：本文为CSDN博主「zhangheng007a」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
-原文链接：https://blog.csdn.net/weixin_38120374/article/details/80607369
