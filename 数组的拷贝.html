@@ -1,0 +1,173 @@
+<div class="htmledit_views" id="content_views">
+    <h1> 数组复制效率的比较</h1>
+
+    <p style="text-indent:50px;">java中数组复制的方式，有以下几种</p>
+
+    <p style="text-indent:50px;">（1）System.arraycopy（）；</p>
+
+    <p style="text-indent:50px;">（2）Arrays.copyOf（）；</p>
+
+    <p style="text-indent:50px;">（3）clone（）；</p>
+
+    <p style="text-indent:50px;">（4）for循环</p>
+
+    <p style="text-indent:50px;">今天我们比较一下这四者的效率</p>
+
+    <hr />
+    <h2>一、System.arraycopy（）</h2>
+
+    <p style="text-indent:50px;">此方法的源码如下：</p>
+
+    <pre class="has">
+<code class="language-java"> public static native void arraycopy(Object src,  int  srcPos,
+                                        Object dest, int destPos,
+                                        int length);</code></pre>
+
+    <p style="text-indent:50px;">可见此方法是一个本地方法，方法对应的实现不在当前文件里，而是在其他语言实现的的文件的，比如C、C++中。</p>
+
+    <p style="text-indent:50px;">使用本地方法，案例来说效率应该最高，稍后进行效率测试。</p>
+
+    <hr />
+    <h2>二、Arrays.copyOf（）</h2>
+
+    <p style="text-indent:50px;">此方法的源码如下：</p>
+
+    <pre class="has">
+<code class="language-java">    public static &lt;T,U&gt; T[] copyOf(U[] original, int newLength, Class&lt;? extends T[]&gt; newType) {
+        @SuppressWarnings("unchecked")
+        T[] copy = ((Object)newType == (Object)Object[].class)
+            ? (T[]) new Object[newLength]
+            : (T[]) Array.newInstance(newType.getComponentType(), newLength);
+        System.arraycopy(original, 0, copy, 0,
+                         Math.min(original.length, newLength));
+        return copy;
+    }</code></pre>
+
+    <p style="text-indent:50px;">可以看得出来，本质上调用的是System.arraycopy（）方法，也就是前一种方法，那么效率肯定比不上前一种数组复制方法。</p>
+
+    <hr />
+    <h2>三、clone（）</h2>
+
+    <p style="text-indent:50px;">此方法的源码如下：</p>
+
+    <pre class="has">
+<code class="language-java"> protected native Object clone() throws CloneNotSupportedException;</code></pre>
+
+    <p style="text-indent:50px;">这个方法是Object类中的一个本地方法，这里虽然返回Object，看着需要强制类型转换，但Object子类重写了这个方法，会返回相应的类型。</p>
+
+    <hr />
+    <h2>四、for循环</h2>
+
+    <p style="text-indent:50px;">最简单粗暴的一种方式，循环原始数组并直接赋值到目标数组中。</p>
+
+    <hr />
+    <h2>五、四种的比较</h2>
+
+    <p style="text-indent:50px;">他们之间的效率比较需要从原始数组的大小出发。</p>
+
+    <p style="text-indent:50px;">先贴出比较的代码：</p>
+
+    <pre class="has">
+<code class="language-java">
+    package day0908;
+
+    import java.util.Arrays;
+
+    public class TestArrayCopy {
+        public static void testSystemArrayCopy(String[] orginal) {
+            long start_time = System.nanoTime();
+            String[] target = new String[orginal.length];
+            System.arraycopy(orginal, 0, target, 0, target.length);
+            long end_time = System.nanoTime();
+            System.out.println("使用System.arraycopy方法耗时:" + (end_time - start_time));
+
+        }
+
+        public static void testArraysCopyOf(String[] orginal) {
+            long start_time = System.nanoTime();
+            String[] target = new String[orginal.length];
+            target = Arrays.copyOf(orginal, orginal.length);
+            long end_time = System.nanoTime();
+            System.out.println("使用Arrays.copyOf方法耗时:" + (end_time - start_time));
+        }
+
+        public static void testClone(String[] orginal) {
+            long start_time = System.nanoTime();
+            String[] target = new String[orginal.length];
+            target = orginal.clone();
+            long end_time = System.nanoTime();
+            System.out.println("使用clone方法耗时:" + (end_time - start_time));
+        }
+
+        public static void testFor(String[] orginal) {
+            long start_time = System.nanoTime();
+            String[] target = new String[orginal.length];
+            for (int i = 0; i &lt; orginal.length; i++) {
+                target[i] = orginal[i];
+            }
+            long end_time = System.nanoTime();
+            System.out.println("使用for循环耗时:" + (end_time - start_time));
+        }
+
+        public static void main(String args[]) {
+            //需要改变原始数组的大小
+            String[] original = new String[100];
+            for (int i = 0; i &lt; original.length; i++) {
+                original[i] = "abcd";
+            }
+            System.out.println("原始数组的大小:" + original.length);
+            testSystemArrayCopy(original);
+            testArraysCopyOf(original);
+            testClone(original);
+            testFor(original);
+        }
+    }
+</code></pre>
+
+    <p style="text-indent:50px;">比较他们之间的效率需要从目标数组的大小出发。</p>
+
+    <p style="text-indent:50px;">【1】目标数组是个小数组，长度在200以内</p>
+
+    <p style="text-indent:50px;">四种方式的效率：</p>
+
+    <p style="text-indent:0;"><img alt="" class="has" height="263"
+            src="https://img-blog.csdn.net/20180908205539769?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMzNTkxOTAz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70"
+            width="738" /></p>
+
+    <p style="text-indent:50px;">可以看得出：Arrays.copyOf（）的效率最差，其余三种效率差异不大。</p>
+
+    <hr />
+    <p style="text-indent:50px;">【2】目标是个中等数组，长度以千为单位。</p>
+
+    <p style="text-indent:50px;">四种方式的效率：</p>
+
+    <p style="text-indent:0;"><img alt="" class="has" height="270"
+            src="https://img-blog.csdn.net/20180908210031612?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMzNTkxOTAz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70"
+            width="736" /></p>
+
+    <p style="text-indent:50px;">可以看得出，System.arraycopy（）与clone（）方式差异不大，使用for循环的方式，耗时比之前的情况变得严重起来。</p>
+
+    <hr />
+    <p style="text-indent:50px;">【3】目标数组是个大型数组，长度以万为单位。</p>
+
+    <p style="text-indent:50px;">四种方式的效率：</p>
+
+    <p style="text-indent:0;"><img alt="" class="has" height="232"
+            src="https://img-blog.csdn.net/20180908205639411?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzMzNTkxOTAz/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70"
+            width="740" /></p>
+
+    <p style="text-indent:50px;">可以看得出，此时System.arraycopy（）方法的效率最高，且数组长度在此基础增加时，此方法效率还是最高，而for循环的效率在这种情况下表现得十分糟糕。</p>
+
+    <hr />
+    <h2>六、总结</h2>
+
+    <p style="text-indent:50px;">（1）原始数组长度不管是多少的时候，Arrays.copyOf（）的效率都比System.arraycopy（）差。</p>
+
+    <p style="text-indent:50px;">（2）原始数组长度比较小的时候，几百以内，for循环表现十分优异，并随着数组长度的增加，效率越来越低，因此，for循环适合于小型数组。</p>
+
+    <p style="text-indent:50px;">（3）原始数组长度中等的时候，比如几千的时候，两个本地方法的效率差不多。</p>
+
+    <p style="text-indent:50px;">（4）原始数组长度比较大的时候，以万为单位，这时候本地方法System.arraycopy（）方法的优势体现出来了，力压其他三种方式。</p>
+
+    <p style="text-indent:50px;">因此，需要根据操作的数组的长度，灵活地选择数组复制方式，会使得我们的程序得到性能的略微提升。</p>
+</div>
